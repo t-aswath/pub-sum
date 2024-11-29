@@ -1,9 +1,10 @@
-from flask import Flask 
+from flask import Flask
 from time import sleep
-from playwright.sync_api import sync_playwright 
+from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 
 app = Flask(__name__)
+
 
 def fetch_page(author_id):
     with sync_playwright() as p:
@@ -17,9 +18,12 @@ def fetch_page(author_id):
         while True:
             try:
                 load_more_button = page.locator('#gsc_bpf_more')
-                if load_more_button.is_enabled(): load_more_button.click()
-                else: break
-            except: break
+                if load_more_button.is_enabled():
+                    load_more_button.click()
+                else:
+                    break
+            except ():
+                break
         content = page.content()
         browser.close()
         return content
@@ -31,7 +35,8 @@ def get_author_pubs(author_id):
         html_content = fetch_page(author_id=author_id)
         soup = BeautifulSoup(html_content, 'html.parser')
         author = soup.find(id='gsc_prf_in')
-        if not author: return 'No Author Found'
+        if not author:
+            return 'No Author Found'
 
         author_pubs = dict()
         author_pubs['name'] = author.get_text()
@@ -49,9 +54,9 @@ def get_author_pubs(author_id):
         publications = []
         journals = []
         pub_table = soup.find(id='gsc_a_t')
-        if pub_table: 
+        if pub_table:
             pub_tbody = pub_table.find('tbody')
-            if pub_tbody: 
+            if pub_tbody:
                 for trow in pub_tbody.find_all('tr'):
                     pub_details = dict()
                     tdata = trow.find_all('td')
@@ -66,7 +71,10 @@ def get_author_pubs(author_id):
                 author_pubs["pubs"] = publications
         journal_cnt = dict()
         for journal in journals:
-            if journal in journal_cnt: journal_cnt[journal] += 1
-            else: journal_cnt[journal] = 1
+            if journal in journal_cnt:
+                journal_cnt[journal] += 1
+            else:
+                journal_cnt[journal] = 1
         return [author_pubs,f"No. of Journals and Conferences : {len(journals)}",  journals,f"No. of Unique Journals and Conferences: {len(journal_cnt)}", journal_cnt]
-    except: return 'Failed to Load'
+    except ():
+        return 'Failed to Load'
